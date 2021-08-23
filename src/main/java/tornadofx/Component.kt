@@ -2,9 +2,27 @@
 
 package tornadofx
 
+import java.io.Closeable
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.StringReader
+import java.net.URL
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Logger
+import java.util.prefs.Preferences
 import javafx.application.HostServices
 import javafx.beans.binding.BooleanExpression
-import javafx.beans.property.*
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.ReadOnlyBooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.beans.value.ChangeListener
 import javafx.collections.FXCollections
 import javafx.concurrent.Task
@@ -16,7 +34,17 @@ import javafx.geometry.Orientation
 import javafx.scene.Node
 import javafx.scene.Parent
 import javafx.scene.Scene
-import javafx.scene.control.*
+import javafx.scene.control.Button
+import javafx.scene.control.ComboBox
+import javafx.scene.control.ListCell
+import javafx.scene.control.ListView
+import javafx.scene.control.Tab
+import javafx.scene.control.TabPane
+import javafx.scene.control.TableCell
+import javafx.scene.control.TableColumn
+import javafx.scene.control.TableView
+import javafx.scene.control.TreeTableView
+import javafx.scene.control.TreeView
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
@@ -34,22 +62,17 @@ import javafx.stage.Stage
 import javafx.stage.StageStyle
 import javafx.stage.Window
 import javafx.util.Duration
-import java.io.Closeable
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.StringReader
-import java.net.URL
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
-import java.util.logging.Logger
-import java.util.prefs.Preferences
 import javax.json.Json
-import javax.json.JsonObject
 import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.*
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction1
+import kotlin.reflect.KFunction2
+import kotlin.reflect.KFunction3
+import kotlin.reflect.KFunction4
+import kotlin.reflect.KFunction5
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 @Deprecated("Injectable was a misnomer", ReplaceWith("ScopedInstance"))
 interface Injectable : ScopedInstance
@@ -228,6 +251,7 @@ abstract class Component : Configurable {
     }
 
     fun <T : ScopedInstance> setInScope(value: T, scope: Scope = this.scope) = FX.getComponents(scope).put(value.javaClass.kotlin, value)
+    fun <T : ScopedInstance> setInScopeWithKey(key: KClass<T>, value: T, scope: Scope = this.scope) = FX.getComponents(scope).put(key, value)
 
     @Deprecated("No need to use the nullableParam anymore, use param instead", ReplaceWith("param(defaultValue)"))
     inline fun <reified T> nullableParam(defaultValue: T? = null) = param(defaultValue)
@@ -450,10 +474,22 @@ abstract class UIComponent(viewTitle: String? = "", icon: Node? = null) : Compon
 
     // If the UIComponent property is set, prefer this to the property. This makes it possible to do subdelegation
     // using forwardWorkspaceActions inside other components like TabPane(https://github.com/edvin/tornadofx/issues/894)
-    internal val effectiveSavable: BooleanExpression get() = booleanBinding(savable, properties) { (properties["tornadofx.savable"] as? BooleanExpression)?.value ?: this.value }
-    internal val effectiveRefreshable: BooleanExpression get() = booleanBinding(refreshable, properties) { (properties["tornadofx.refreshable"] as? BooleanExpression)?.value ?: this.value }
-    internal val effectiveCreatable: BooleanExpression get() = booleanBinding(creatable, properties) { (properties["tornadofx.creatable"] as? BooleanExpression)?.value ?: this.value }
-    internal val effectiveDeletable: BooleanExpression get() = booleanBinding(deletable, properties) { (properties["tornadofx.deletable"] as? BooleanExpression)?.value ?: this.value }
+    internal val effectiveSavable: BooleanExpression
+        get() = booleanBinding(savable, properties) {
+            (properties["tornadofx.savable"] as? BooleanExpression)?.value ?: this.value
+        }
+    internal val effectiveRefreshable: BooleanExpression
+        get() = booleanBinding(refreshable, properties) {
+            (properties["tornadofx.refreshable"] as? BooleanExpression)?.value ?: this.value
+        }
+    internal val effectiveCreatable: BooleanExpression
+        get() = booleanBinding(creatable, properties) {
+            (properties["tornadofx.creatable"] as? BooleanExpression)?.value ?: this.value
+        }
+    internal val effectiveDeletable: BooleanExpression
+        get() = booleanBinding(deletable, properties) {
+            (properties["tornadofx.deletable"] as? BooleanExpression)?.value ?: this.value
+        }
 
     /**
      * Forward the Workspace button states and actions to the TabPane, which
@@ -793,6 +829,7 @@ abstract class UIComponent(viewTitle: String? = "", icon: Node? = null) : Compon
     fun <S, T, F : TableCellFragment<S, T>> TableColumn<S, T>.cellFragment(fragment: KClass<F>) = cellFragment(scope, fragment)
 
     fun <T, F : TreeCellFragment<T>> TreeView<T>.cellFragment(fragment: KClass<F>) = cellFragment(scope, fragment)
+
     /**
      * Calculate a unique Node per item and set this Node as the graphic of the TableCell.
      *
