@@ -2820,8 +2820,8 @@ class PropertiesTest {
 
     @Test fun propertyFromMapKey() {
         val map = mutableMapOf("hello" to "world", "number" to 42)
-        val helloProperty = map.toProperty("hello") { SimpleStringProperty(it as String?) }
-        val numberProperty = map.toProperty("number") { SimpleIntegerProperty(it as Int) }
+        val helloProperty: Property<String> = map.toProperty("hello") { SimpleStringProperty(it as String?) }
+        val numberProperty: Property<Int> = map.toProperty("number") { SimpleObjectProperty<Int>(it as Int) }
         helloProperty.value = "there"
         numberProperty.value = 43
         Assert.assertEquals("there", map["hello"])
