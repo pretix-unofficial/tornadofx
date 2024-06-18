@@ -1,0 +1,56 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.23'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.glassfish:javax.json:1.1.2'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'org.apache.felix:org.apache.felix.framework:6.0.1'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.23'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.9.23'
+    implementation 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
+    implementation 'org.openjfx:javafx-controls:17.0.11'
+    implementation 'org.openjfx:javafx-fxml:17.0.11'
+    implementation 'org.openjfx:javafx-web:17.0.11'
+    implementation 'org.openjfx:javafx-media:17.0.11'
+    implementation 'org.openjfx:javafx-swing:17.0.11'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.9.23'
+    testImplementation 'org.testfx:testfx-core:4.0.15-alpha'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+}
+
+group = 'no.tornado'
+version = '2.0.0-SNAPSHOT'
+description = 'TornadoFX'
+
+sourceSets {
+    main.java.srcDirs = []
+    main.kotlin.srcDirs = ['src/main/java', 'src/main/kotlin']
+    main.resources.srcDirs = ['src/main/resources']
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+
+    withSourcesJar()
+}
+
+javafx {
+    version = '17.0.11'
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.web', 'javafx.media' ]
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
