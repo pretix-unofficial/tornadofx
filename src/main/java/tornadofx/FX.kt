@@ -504,8 +504,9 @@ fun EventTarget.addChildIfPossible(node: Node, index: Int? = null) {
         val target = builderTarget
         if (target != null) {
             // Trick to get around the disallowed use of invoke on out projected types
-            @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
-            target!!(this).value = node
+            //@Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
+            //target!!(this).value = node
+            throw AssertionError("FIXME, broken after kotlin update, find other solution for addChildIfPossible")
             return
         }
     }
